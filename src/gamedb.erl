@@ -1,7 +1,7 @@
 -module(gamedb).
 -export ([start/0]).
 -export ([init/1, code_change/3, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
--export ([insert/2, find/2]).
+-export ([insert/2, modify/3, find_all/2, find_one/2]).
 
 -behaviour(gen_server).
 
@@ -19,8 +19,13 @@ init([]) ->
 insert(Collection, Data) ->
     gen_server:call(gamedb, {insert, Collection, Data}).
 
-find(Collection, {}) ->
-    gen_server:call(gamedb, {find, Collection, {}}).
+modify(Collection, Selector, Data) ->
+    gen_server:call(gamedb, {modify, Collection, Selector, Data}).
+
+find_all(Collection, Selector) ->
+    gen_server:call(gamedb, {find_all, Collection, Selector}).
+find_one(Collection, Selector) ->
+    gen_server:call(gamedb, {find_one, Collection, Selector}).
 
 
 code_change(_OldVsn, State, _Extra) ->
@@ -31,12 +36,21 @@ handle_call({insert, Collection, Data}, _From, State) ->
         mongo:insert(Collection, Data)
     end),
     {reply, ok, State};
-handle_call({find, Collection, {}}, _From, State) ->
-    Cursor = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
-                mongo:find(Collection, {})
+handle_call({modify, Collection, Selector, Data}, _From, State) ->
+    mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
+        mongo:modify(Collection, Selector, {'$set', Data})
     end),
-    Result = mongo:next(Cursor),
+    {reply, ok, State};
+handle_call({find_all, Collection, Selector}, _From, State) ->
+    Result = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
+                mongo:rest(mongo:find(Collection, Selector))
+    end),
     {reply, Result, State};
+handle_call({find_one, Collection, Selector}, _From, State) ->
+    {ok, {Result}} = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
+                mongo:next(mongo:find(Collection, Selector))
+    end),
+    {reply, {ok, [Result]}, State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
