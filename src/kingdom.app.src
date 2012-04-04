@@ -1,0 +1,9 @@
+%% -*- erlang -*-
+{application, kingdom,
+ [{description, "kingdom"},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, []},
+  {mod, {'kingdom_app', []}},
+  {env, []},
+  {applications, [kernel, stdlib, crypto]}]}.
