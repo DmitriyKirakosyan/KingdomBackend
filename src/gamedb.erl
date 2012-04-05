@@ -36,16 +36,19 @@ handle_call({insert, Collection, Data}, _From, State) ->
         mongo:insert(Collection, Data)
     end),
     {reply, ok, State};
+
 handle_call({modify, Collection, Selector, Data}, _From, State) ->
     mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
         mongo:modify(Collection, Selector, {'$set', Data})
     end),
     {reply, ok, State};
+
 handle_call({find_all, Collection, Selector}, _From, State) ->
     Result = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
                 mongo:rest(mongo:find(Collection, Selector))
     end),
     {reply, Result, State};
+    
 handle_call({find_one, Collection, Selector}, _From, State) ->
     {ok, {Result}} = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
                 mongo:next(mongo:find(Collection, Selector))

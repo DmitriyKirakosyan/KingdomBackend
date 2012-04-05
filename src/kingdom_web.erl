@@ -33,10 +33,18 @@ loop(Req, DocRoot) ->
                         Req:serve_file(Path, DocRoot)
                 end;
             'POST' ->
-                case Path of
-                    _ ->
-                        Req:not_found()
-                end;
+                io:format("post coming...~n", []),
+                ParsedPost = Req:parse_post(),
+                Request = proplists:get_value("request", ParsedPost),
+                Response = case mochijson2:decode(Request) of
+                   {struct, Props} ->
+                       handle_request(Props);
+                   _ ->
+                      io:format("bad request : ~p~n", [Request]),
+                      {error, bad_request}
+                end,
+                Req:respond({200, mochiweb_headers:empty(), mochijson2:encode([{response, [Response]}])});
+
             _ ->
                 Req:respond({501, [], []})
         end
@@ -53,6 +61,10 @@ loop(Req, DocRoot) ->
     end.
 
 %% Internal API
+
+handle_request(Request) ->
+  io:format("parsed from json request : ~p~n", [Request]),
+  user_request_handler:handle(Request).
 
 get_option(Option, Options) ->
     {proplists:get_value(Option, Options), proplists:delete(Option, Options)}.
