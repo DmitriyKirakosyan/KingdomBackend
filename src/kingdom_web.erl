@@ -27,15 +27,16 @@ loop(Req, DocRoot) ->
         case Req:get(method) of
             Method when Method =:= 'GET'; Method =:= 'HEAD' ->
                 case Path of
-                    "hello" ->
-                        gamedb:insert(test, {x, 3});
+                    "feedback" ->
+                        Body = feedback_maker:make(),
+                        Req:respond({200, mochiweb_headers:empty(), Body});
                     _ ->
                         Req:serve_file(Path, DocRoot)
                 end;
             'POST' ->
                 io:format("post coming...~n", []),
                 ParsedPost = Req:parse_post(),
-                Request = proplists:get_value("request", ParsedPost),
+                Request = proplists:get_value("request", ParsedPost, <<"{}">>),
                 Response = case mochijson2:decode(Request) of
                    {struct, Props} ->
                        handle_request(Props);
@@ -66,10 +67,22 @@ handle_request(Request) ->
   io:format("parsed from json request : ~p~n", [Request]),
   case proplists:get_value(<<"request">>, Request) of
     RequestName when is_binary(RequestName) ->
-      user_request_handler:handle(RequestName, proplists:delete(RequestName, Request));
-    _Error -> 
-      io:format("request name : ~p~n", [_Error]),
-      {error, bad_request}
+      user_request_handler:handle(RequestName, proplists:delete(<<"request">>, Request));
+    undefined -> 
+      io:format("request undefined, tying others~n"),
+      try_handle_other_requests(Request)
+  end.
+
+try_handle_other_requests(Request) ->
+   RequestTypeList = [<<"ninja_request">>, <<"hunter_request">>, <<"spaceshooter_request">>, <<"tanks_request">>],
+   try_request_type_list(RequestTypeList, Request).
+
+try_request_type_list([], _Request) -> {error, bad_request};
+try_request_type_list([RequestType | OtherRequestTypes], Request) ->
+  case proplists:get_value(RequestType, Request) of
+    undefined -> try_request_type_list(OtherRequestTypes, Request);
+    RequestName ->
+      user_request_handler:handle_other(RequestType, RequestName, proplists:delete(RequestType, Request))
   end.
 
 get_option(Option, Options) ->

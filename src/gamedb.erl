@@ -16,6 +16,8 @@ init([]) ->
   {ok, #state{conn=Conn}}.
 
 
+%% API
+
 insert(Collection, Data) ->
     gen_server:call(gamedb, {insert, Collection, Data}).
 
@@ -27,6 +29,7 @@ find_all(Collection, Selector) ->
 find_one(Collection, Selector) ->
     gen_server:call(gamedb, {find_one, Collection, Selector}).
 
+%% Internal functions
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
