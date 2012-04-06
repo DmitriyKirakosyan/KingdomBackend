@@ -48,12 +48,13 @@ handle_call({find_all, Collection, Selector}, _From, State) ->
                 mongo:rest(mongo:find(Collection, Selector))
     end),
     {reply, Result, State};
-    
+
 handle_call({find_one, Collection, Selector}, _From, State) ->
-    {ok, {Result}} = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
+    {ok, Result} = mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
                 mongo:next(mongo:find(Collection, Selector))
     end),
-    {reply, {ok, [Result]}, State};
+    FinalyResult = case Result of {Data} -> [Data]; {} -> [] end,
+    {reply, {ok, FinalyResult}, State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 

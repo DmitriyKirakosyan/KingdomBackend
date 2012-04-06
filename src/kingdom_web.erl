@@ -64,7 +64,13 @@ loop(Req, DocRoot) ->
 
 handle_request(Request) ->
   io:format("parsed from json request : ~p~n", [Request]),
-  user_request_handler:handle(Request).
+  case proplists:get_value(<<"request">>, Request) of
+    RequestName when is_binary(RequestName) ->
+      user_request_handler:handle(RequestName, proplists:delete(RequestName, Request));
+    _Error -> 
+      io:format("request name : ~p~n", [_Error]),
+      {error, bad_request}
+  end.
 
 get_option(Option, Options) ->
     {proplists:get_value(Option, Options), proplists:delete(Option, Options)}.

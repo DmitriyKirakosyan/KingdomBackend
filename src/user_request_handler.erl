@@ -1,16 +1,13 @@
 -module (user_request_handler).
 
--export ([handle/1]).
+-export ([handle/2]).
 
-handle(Request) ->
-    RequestName = proplists:get_value(<<"request">>, Request),
-    case RequestName of
-        <<"getmap">> ->
-            game_map:get_map();
-        <<"savemap">> ->
-            case proplists:get_value(<<"map">>, Request) of
-                Map when is_binary(Map) ->
-                    game_map:save_map(Map);
-                _ -> {error, wrong_map}
-            end
+handle(<<"getmap">>, _Params) ->
+    game_map:get_map();
+handle(<<"savemap">>, Params) ->
+    case proplists:get_value(<<"map">>, Params) of
+        {struct, MapParams} ->
+            io:format("json encoded map : ~p~n", [mochijson2:encode(MapParams)]),
+            game_map:save_map(mochijson2:encode(MapParams));
+        _ -> {error, wrong_map}
     end.
