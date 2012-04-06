@@ -6,9 +6,11 @@ handle(Request) ->
     RequestName = proplists:get_value(<<"request">>, Request),
     case RequestName of
         <<"getmap">> ->
-            io:format("get map request"),
-            ok;
+            game_map:get_map();
         <<"savemap">> ->
-            io:format("save map request"),
-            ok
+            case proplists:get_value(<<"map">>, Request) of
+                Map when is_binary(Map) ->
+                    game_map:save_map(Map);
+                _ -> {error, wrong_map}
+            end
     end.
