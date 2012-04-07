@@ -10,10 +10,16 @@ handle(<<"savemap">>, Params) ->
             io:format("json encoded map : ~p~n", [mochijson2:encode(MapParams)]),
             game_map:save_map(mochijson2:encode(MapParams));
         _ -> {error, wrong_map}
-    end.
+    end;
 handle(<<"plant_flower">>, Params) ->
-    case proplists:get_value(<<"flower_id">>) of
-        <<"flower1">> ->
+    case proplists:get_value(<<"flower_id">>, Params) of
+        FlowerId when is_binary(FlowerId) ->
+            user_session:add_flower(binary_to_atom(FlowerId, utf8));
+        _ -> {error, bad_flower}
+    end;
+
+handle(<<"get_state">>, _Params) ->
+    user_session:get_state().
 
 
 %% other requests
