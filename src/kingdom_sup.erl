@@ -43,7 +43,8 @@ upgrade() ->
 init([]) ->
     Web = web_specs(kingdom_web, 8080),
     DB = {gamedb, {gamedb, start, []}, permanent, 5000, worker, dynamic},
-    Processes = [Web, DB],
+    UserSession = {user_session, {user_session, start, []}, permanent, 5000, worker, dynamic},
+    Processes = [Web, DB, UserSession],
     Strategy = {one_for_one, 10, 10},
     {ok,
      {Strategy, lists:flatten(Processes)}}.

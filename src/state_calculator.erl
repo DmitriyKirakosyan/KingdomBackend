@@ -6,10 +6,10 @@
 -include ("game.hrl").
 
 calculate(State) when is_record(State, user_state) ->
-    TimeDiff = milliseconds_diff(milliseconds_now(), State#user_state.last_update),
-    io:format("time diff : ~p~n", [TimeDiff]),
+    TimeNow = milliseconds_now(),
+    TimeDiff = TimeNow - State#user_state.last_update,
     Flowers = State#user_state.flowers,
-    AliveFlowers = [Flower || Flower <- Flowers, (Flower#user_flower.time - TimeDiff div 1000) > 0],
+    AliveFlowers = [Flower || Flower <- Flowers, (Flower#user_flower.time - TimeDiff) > 0],
     CalculatedAliveFlowers = [Flower#user_flower{time = Flower#user_flower.time - TimeDiff} || Flower <- AliveFlowers],
     MoneyEarned = lists:foldl(
         fun (El, Sum) ->
@@ -21,7 +21,7 @@ calculate(State) when is_record(State, user_state) ->
             end
         end
         , 0, Flowers),
-    State#user_state{money = State#user_state.money + MoneyEarned, flowers = CalculatedAliveFlowers}.
+    State#user_state{money = State#user_state.money + MoneyEarned, flowers = CalculatedAliveFlowers, last_update = TimeNow}.
 
 get_flower_profit(#user_flower{id = FlowerId}) ->
     if

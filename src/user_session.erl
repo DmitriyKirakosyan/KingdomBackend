@@ -5,18 +5,20 @@
 
 -include ("game.hrl").
 
+-include_lib("eunit/include/eunit.hrl").
+
 -behaviour (gen_server).
 
 start() ->
   gen_server:start_link({local, user_session}, user_session, [], []).
 
 init([]) ->
-  {ok, #user_state{}}.
+  {ok, #user_state{last_update=state_calculator:milliseconds_now()}}.
 
 
 %% API
 
-add_flower(FlowerId) when is_record(FlowerId, flower) ->
+add_flower(FlowerId) ->
     gen_server:call(user_session, {add_flower, FlowerId}).
 
 buy_town() ->
@@ -24,6 +26,18 @@ buy_town() ->
 
 get_state() ->
   gen_server:call(user_session, get_state).
+
+%% Tests
+
+get_state_test() ->
+    {ok, _State=[{money, _Money}, {flowers, FlowerList}]} = get_state().
+
+add_flower_test() ->
+  {ok, added} = add_flower(flower1),
+  {ok, State} = get_state(),
+  [[{id, FlowerId}, {time, _Time}] | _Flowers] = proplists:get_value(flowers, State),
+  flower1 = FlowerId.
+
 
 
 %% Internal functions
@@ -41,8 +55,8 @@ handle_call(buy_town, _From, State) ->
 handle_call({add_flower, FlowerId}, _From, State) ->
     NewState = state_calculator:calculate(State),
     NewFlowers = case FlowerId of
-      flower2 -> [#user_flower{id=?flower2#flower.id, time=?flower2#flower.time_need} | State#user_state.flowers];
-      flower1 -> [#user_flower{id=?flower1#flower.id, time=?flower1#flower.time_need} | State#user_state.flowers];
+      flower2 -> [#user_flower{id=?flower2#flower.id, time=?flower2#flower.time_need} | NewState#user_state.flowers];
+      flower1 -> [#user_flower{id=?flower1#flower.id, time=?flower1#flower.time_need} | NewState#user_state.flowers];
       _ -> NewState#user_state.flowers
     end,
     {reply, {ok, added}, NewState#user_state{flowers=NewFlowers}};
