@@ -38,6 +38,12 @@ add_flower_test() ->
   [[{id, FlowerId}, {time, _Time}] | _Flowers] = proplists:get_value(flowers, State),
   flower1 = FlowerId.
 
+buy_tonw_test() ->
+  {ok, [{money, Money}, {flowers, _Flowers}]} = get_state(),
+  {ok, bought} = buy_town(),
+  {ok, [{money, NewMoney}, {flowers, _NewFlowers}]} = get_state(),
+  MoneyDiff = Money - NewMoney,
+  MoneyDiff = ?town_price.
 
 
 %% Internal functions
