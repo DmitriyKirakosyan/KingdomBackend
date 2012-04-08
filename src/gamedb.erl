@@ -1,7 +1,7 @@
 -module(gamedb).
 -export ([start/0]).
 -export ([init/1, code_change/3, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
--export ([insert/2, modify/3, find_all/2, find_one/2]).
+-export ([insert/2, modify/3, find_all/2, find_one/2, remove_collection/1]).
 
 -behaviour(gen_server).
 
@@ -28,6 +28,9 @@ find_all(Collection, Selector) ->
     gen_server:call(gamedb, {find_all, Collection, Selector}).
 find_one(Collection, Selector) ->
     gen_server:call(gamedb, {find_one, Collection, Selector}).
+
+remove_collection(Collection) ->
+    gen_server:call(gamedb, {remove_collection, Collection}).
 
 %% Internal functions
 
@@ -58,6 +61,13 @@ handle_call({find_one, Collection, Selector}, _From, State) ->
     end),
     FinalyResult = case Result of {Data} -> [Data]; {} -> [] end,
     {reply, {ok, FinalyResult}, State};
+
+handle_call({remove_collection, Collection}, _From, State) ->
+    mongo:do(safe, master, State#state.conn, ?DB_NAME, fun() ->
+        mongo:delete(Collection, {})
+    end),
+    {reply, {ok, removed}, State};
+
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
