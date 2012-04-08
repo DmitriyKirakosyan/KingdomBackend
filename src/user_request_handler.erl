@@ -2,15 +2,19 @@
 
 -export ([handle/2, handle_other/3]).
 
-handle(<<"getmap">>, _Params) ->
+handle(<<"get_map">>, _Params) ->
     game_map:get_map();
-handle(<<"savemap">>, Params) ->
+handle(<<"save_map">>, Params) ->
     case proplists:get_value(<<"map">>, Params) of
         {struct, MapParams} ->
             io:format("json encoded map : ~p~n", [mochijson2:encode(MapParams)]),
             game_map:save_map(mochijson2:encode(MapParams));
         _ -> {error, wrong_map}
     end;
+
+handle(<<"get_objects">>, _Params) ->
+    game_map:get_objects();
+
 handle(<<"plant_flower">>, Params) ->
     case proplists:get_value(<<"flower_id">>, Params) of
         FlowerId when is_binary(FlowerId) ->
