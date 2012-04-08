@@ -40,7 +40,13 @@ handle(<<"get_state">>, _Params) ->
 
 %% other requests
 
-handle_other(GameName, <<"save_feedback">>, Request) ->
+handle_other(<<"save_feedback">>, GameRequestType, Request) ->
+    GameName = case GameRequestType of
+        <<"hunter_request">> -> hunter;
+        <<"spaceshooter_request">> -> spaceshooter;
+        <<"tank_request">> -> tank;
+        _ -> ninja
+    end,
     case proplists:get_value(<<"feedback">>, Request) of
         undefined -> {error, empty_feedback};
         Feedback ->

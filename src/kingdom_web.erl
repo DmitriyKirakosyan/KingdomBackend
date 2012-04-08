@@ -68,7 +68,7 @@ handle_request(Request) ->
   case proplists:get_value(<<"request">>, Request) of
     RequestName when is_binary(RequestName) ->
       user_request_handler:handle(RequestName, proplists:delete(<<"request">>, Request));
-    undefined -> 
+    undefined ->
       io:format("request undefined, tying others~n"),
       try_handle_other_requests(Request)
   end.
@@ -82,7 +82,7 @@ try_request_type_list([RequestType | OtherRequestTypes], Request) ->
   case proplists:get_value(RequestType, Request) of
     undefined -> try_request_type_list(OtherRequestTypes, Request);
     RequestName ->
-      user_request_handler:handle_other(RequestType, RequestName, proplists:delete(RequestType, Request))
+      user_request_handler:handle_other(RequestName, RequestType, proplists:delete(RequestType, Request))
   end.
 
 get_option(Option, Options) ->

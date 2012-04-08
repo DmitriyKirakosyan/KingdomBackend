@@ -13,14 +13,14 @@ make() ->
 
 
 get_feedback_from_db(GameName) ->
-case gamedb:find_all(?feedback_collection, {game_name, GameName}) of
-        {ok, []} ->
-            <<"-">>;
-        {ok, DbItemList} ->
-            FeedbackList = [proplists:get_value(feedback, DbItem) || DbItem <- DbItemList],
-            create_feedback(FeedbackList);
-        _Error -> <<"-">>
-end.
+    case gamedb:find_all(?feedback_collection, {game_name, GameName}) of
+            {ok, []} ->
+                <<"-">>;
+            {ok, DbItemList} ->
+                FeedbackList = [bson:lookup(feedback, DbItem, <<"nothing">>) || DbItem <- DbItemList],
+                create_feedback(FeedbackList);
+            _Error -> <<"-">>
+    end.
 
 create_feedback(FeedbackList) -> create_feedback(FeedbackList, <<"">>).
 
