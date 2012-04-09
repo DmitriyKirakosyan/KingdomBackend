@@ -15,12 +15,11 @@ handle(<<"save_map">>, Params) ->
 handle(<<"get_objects">>, _Params) ->
     game_map:get_objects();
 
-handle(<<"plant_flower">>, Params) ->
-    case proplists:get_value(<<"flower_id">>, Params) of
-        FlowerId when is_binary(FlowerId) ->
-            user_session:add_flower(binary_to_atom(FlowerId, utf8));
-        _ -> {error, bad_flower}
-    end;
+handle(<<"plant_flower">>, _Params) ->
+    user_session:plant_flower();
+
+handle(<<"get_flower_profit">>, Params) ->
+    user_session:get_flower_profit();
 
 handle(<<"buy_town">>, Params) ->
     case user_session:buy_town() of

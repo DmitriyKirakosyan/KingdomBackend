@@ -8,30 +8,13 @@
 calculate(State) when is_record(State, user_state) ->
     TimeNow = milliseconds_now(),
     TimeDiff = TimeNow - State#user_state.last_update,
-    Flowers = State#user_state.flowers,
-    AliveFlowers = [Flower || Flower <- Flowers, (Flower#user_flower.time - TimeDiff) > 0],
-    CalculatedAliveFlowers = [Flower#user_flower{time = Flower#user_flower.time - TimeDiff} || Flower <- AliveFlowers],
-    MoneyEarned = lists:foldl(
-        fun (El, Sum) ->
-            case lists:member(El, AliveFlowers) of
-                false ->
-                    Sum + get_flower_profit(El);
-                _ ->
-                    Sum
-            end
-        end
-        , 0, Flowers),
-    State#user_state{money = State#user_state.money + MoneyEarned, flowers = CalculatedAliveFlowers, last_update = TimeNow}.
-
-get_flower_profit(#user_flower{id = FlowerId}) ->
-    if
-        FlowerId == ?flower1#flower.id ->
-            ?flower1#flower.profit_money;
-        FlowerId == ?flower2#flower.id ->
-            ?flower2#flower.profit_money;
+    Flower = State#user_state.flower,
+    case (Flower#user_flower.time - TimeDiff) =< 0 of
         true ->
-            io:format("wrong flower id : ~p~n", [FlowerId]),
-            0
+            NewFlower = Flower#user_flower{completed = true, time = 0},
+            State#user_state{flower = NewFlower, last_update = TimeNow};
+        _False ->
+            State#user_state{last_update = TimeNow}
     end.
 
 milliseconds_diff(T2, T1) ->
