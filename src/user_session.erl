@@ -1,7 +1,7 @@
 -module (user_session).
 
 -export ([start/0, init/1, code_change/3, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
--export ([plant_flower/0, get_flower_profit/0, buy_town/0, get_state/0]).
+-export ([plant_flower/0, get_flower_profit/0, buy_town/0, get_state/0, upgrade_castle/0]).
 
 -include ("game.hrl").
 
@@ -13,7 +13,7 @@ start() ->
   gen_server:start_link({local, user_session}, user_session, [], []).
 
 init([]) ->
-  {ok, #user_state{last_update=state_calculator:milliseconds_now()}}.
+  {ok, #user_state{last_update=state_calculator:milliseconds_now(), flower=#user_flower{id=flower1}}}.
 
 
 %% API
@@ -30,20 +30,23 @@ buy_town() ->
 get_state() ->
   gen_server:call(user_session, get_state).
 
+upgrade_castle() ->
+  gen_server:call(user_session, upgrade_castle).
+
 %% Tests
 
 get_state_test() ->
-    {ok, _State=[{money, _Money}, {flower, Flower}]} = get_state().
+    {ok, _State=[{money, _Money}, {food, _Food}, {flower, _Flower}]} = get_state().
 
 plant_flower_test() ->
-  {ok, added} = plant_flower(),
+  {ok, planted} = plant_flower(),
   {ok, State} = get_state(),
   [{id, _FlowerId}, {time, _Time}, {completed, false}] = proplists:get_value(flower, State).
 
 buy_tonw_test() ->
-  {ok, [{money, Money}, {flowers, _Flowers}]} = get_state(),
+  {ok, [{money, Money}, {food, _Food}, {flower, _Flowers}]} = get_state(),
   {ok, bought} = buy_town(),
-  {ok, [{money, NewMoney}, {flowers, _NewFlowers}]} = get_state(),
+  {ok, [{money, NewMoney}, {food, _Food}, {flower, _Flower}]} = get_state(),
   MoneyDiff = Money - NewMoney,
   MoneyDiff = ?town_price.
 
@@ -66,7 +69,7 @@ handle_call(plant_flower, _From, State) ->
     case Flower#user_flower.completed of
       false ->
           NewFlower = Flower#user_flower{time = ?flower1#flower.time_need},
-          {reply, {ok, plated}, NewState#user_state{flower=NewFlower}};
+          {reply, {ok, planted}, NewState#user_state{flower=NewFlower}};
       _True ->
         {reply, {error, not_completed}, NewState}
     end;
@@ -82,11 +85,20 @@ handle_call(get_flower_profit, _From, State) ->
             {reply, {error, not_completed}, NewState}
     end;
 
+handle_call(upgrade_castle, _From, State) ->
+  NewState = state_calculator:calculate(State),
+  if
+    State#user_state.level < ?MAX_LEVEL ->
+      {reply, {ok, levelup}, NewState#user_state{level=NewState#user_state.level + 1}};
+    true ->
+      {reply, {error, max_level}, NewState}
+  end;
+
 handle_call(get_state, _From, State) ->
   NewState = state_calculator:calculate(State),
   Flower = NewState#user_state.flower,
   FlowerProplist = [{id, Flower#user_flower.id}, {time, Flower#user_flower.time}, {completed, Flower#user_flower.completed}],
-  UserRespond = [{money, NewState#user_state.money}, {flower, FlowerProplist}],
+  UserRespond = [{money, NewState#user_state.money}, {food, NewState#user_state.food}, {flower, FlowerProplist}],
   {reply, {ok, UserRespond}, NewState};
 
 handle_call(_Request, _From, State) ->
