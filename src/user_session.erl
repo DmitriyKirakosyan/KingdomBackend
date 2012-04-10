@@ -33,20 +33,24 @@ get_state() ->
 upgrade_castle() ->
   gen_server:call(user_session, upgrade_castle).
 
+clean_plot() ->
+  get_server:call(user_session, clean_plot).
+
 %% Tests
 
 get_state_test() ->
-    {ok, _State=[{money, _Money}, {food, _Food}, {flower, _Flower}]} = get_state().
+    {ok, _State=[{money, _Money}, {food, _Food}, {plot, _Flower}]} = get_state().
 
 plant_flower_test() ->
+  {ok, cleaned} = clean_plot(),
   {ok, planted} = plant_flower(),
   {ok, State} = get_state(),
-  [{id, _FlowerId}, {time, _Time}, {completed, false}] = proplists:get_value(flower, State).
+  [{id, _FlowerId}, {time, _Time}, {completed, false}] = proplists:get_value(plot, State).
 
 buy_tonw_test() ->
-  {ok, [{money, Money}, {food, _Food}, {flower, _Flowers}]} = get_state(),
+  {ok, [{money, Money}, {food, _Food}, {plot, _Flowers}]} = get_state(),
   {ok, bought} = buy_town(),
-  {ok, [{money, NewMoney}, {food, _Food}, {flower, _Flower}]} = get_state(),
+  {ok, [{money, NewMoney}, {food, _Food}, {plot, _Flower}]} = get_state(),
   MoneyDiff = Money - NewMoney,
   MoneyDiff = ?town_price.
 
@@ -98,8 +102,13 @@ handle_call(get_state, _From, State) ->
   NewState = state_calculator:calculate(State),
   Flower = NewState#user_state.flower,
   FlowerProplist = [{id, Flower#user_flower.id}, {time, Flower#user_flower.time}, {completed, Flower#user_flower.completed}],
-  UserRespond = [{money, NewState#user_state.money}, {food, NewState#user_state.food}, {flower, FlowerProplist}],
+  UserRespond = [{money, NewState#user_state.money}, {food, NewState#user_state.food}, {plot, FlowerProplist}],
   {reply, {ok, UserRespond}, NewState};
+
+handle_call(clean_plot, _From, State) ->
+  NewState = state_calculator:calculate(State),
+  Plot = NewState#user_state.flower,
+  {reply, {ok, cleaned}, NewState#user_state{flower=Plot#user_flower{completed = false, time = 0}}};
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
