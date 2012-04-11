@@ -9,14 +9,21 @@ calculate(State) when is_record(State, user_state) ->
     TimeNow = milliseconds_now(),
     TimeDiff = TimeNow - State#user_state.last_update,
     Flower = State#user_state.flower,
-    NewState = calculate_level(State, TimeDiff),
-    if
+    State1 = calculate_level(State, TimeDiff),
+    NewState = if
         Flower#user_flower.time > 0 andalso (Flower#user_flower.time - TimeDiff) =< 0 ->
             NewFlower = Flower#user_flower{completed = true, time = 0},
-            NewState#user_state{flower = NewFlower, last_update = TimeNow};
+            State1#user_state{flower = NewFlower};
         true ->
-            NewState#user_state{last_update = TimeNow}
-    end.
+            State1
+    end,
+    NewMoney = if
+        NewState#user_state.money > 2000 ->
+            NewState#user_state.money;
+        true ->
+            NewState#user_state.money + TimeDiff div 5
+    end,
+    NewState#user_state{last_update = TimeNow, money = NewMoney}.
 
 calculate_level(State, TimeDiff) ->
     Level = State#user_state.level,

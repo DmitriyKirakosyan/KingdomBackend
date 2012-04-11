@@ -5,6 +5,7 @@
 
 -include ("game.hrl").
 
+-define (NOTEST, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -behaviour (gen_server).
@@ -34,7 +35,7 @@ upgrade_castle() ->
   gen_server:call(user_session, upgrade_castle).
 
 clean_plot() ->
-  get_server:call(user_session, clean_plot).
+  gen_server:call(user_session, clean_plot).
 
 %% Tests
 

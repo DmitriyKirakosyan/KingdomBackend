@@ -1,10 +1,11 @@
 -module (game_map).
--export ([save_map/1, save_objects/1, get_map/0, get_objects/0, add_town/3]).
+-export ([save_map/1, save_objects/1, get_map/0, get_objects/0, add_town/3, remove_town/3]).
 
 -define (map_collection, map).
 
 -include ("game.hrl").
 
+-define (NOTEST, true).
 -include_lib("eunit/include/eunit.hrl").
 
 %% API
@@ -27,7 +28,18 @@ add_town(Id, X, Y) ->
         {ok, Objects} ->
             [Object | Objects];
         {error, wrong_map} ->
+            [Object];
+        _ ->
             [Object]
+    end,
+    save_objects(mochijson2:encode(NewObjects)).
+
+remove_town(_Id, X, Y) ->
+    NewObjects = case get_objects() of
+        {ok, Objects} ->
+            [Object || {struct, Object} <- Objects, proplists:get_value(<<"x">>, Object, 0) /= X orelse proplists:get_value(<<"y">>, Object, 0) /= Y];
+        {error, wrong_map} ->
+            []
     end,
     save_objects(mochijson2:encode(NewObjects)).
 

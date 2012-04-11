@@ -27,11 +27,18 @@ handle(<<"buy_town">>, Params) ->
             Id = proplists:get_value(<<"id">>, Params, 0),
             X = proplists:get_value(<<"x">>, Params, 0),
             Y = proplists:get_value(<<"y">>, Params, 0),
-            game_map:addTown(Id, X, Y),
+            game_map:add_town(Id, X, Y),
             BoughtResult;
         _Error ->
             {error, no_money}
     end;
+
+handle(<<"remove_town">>, Params) ->
+    Id = proplists:get_value(<<"id">>, Params, 0),
+    X = proplists:get_value(<<"x">>, Params, 0),
+    Y = proplists:get_value(<<"y">>, Params, 0),
+    game_map:remove_town(Id, X, Y),
+    {ok, removed};
 
 handle(<<"get_state">>, _Params) ->
     user_session:get_state().
