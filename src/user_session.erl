@@ -39,7 +39,7 @@ clean_plot() ->
 %% Tests
 
 get_state_test() ->
-    {ok, _State=[{money, _Money}, {food, _Food}, {plot, _Flower}]} = get_state().
+    {ok, _State=[{level, _Level}, {money, _Money}, {food, _Food}, {plot, _Flower}]} = get_state().
 
 plant_flower_test() ->
   {ok, cleaned} = clean_plot(),
@@ -48,9 +48,9 @@ plant_flower_test() ->
   [{id, _FlowerId}, {time, _Time}, {completed, false}] = proplists:get_value(plot, State).
 
 buy_tonw_test() ->
-  {ok, [{money, Money}, {food, _Food}, {plot, _Flowers}]} = get_state(),
+  {ok, [{level, _Level}, {money, Money}, {food, _Food}, {plot, _Flowers}]} = get_state(),
   {ok, bought} = buy_town(),
-  {ok, [{money, NewMoney}, {food, _Food}, {plot, _Flower}]} = get_state(),
+  {ok, [{level, _Level}, {money, NewMoney}, {food, _Food}, {plot, _Flower}]} = get_state(),
   MoneyDiff = Money - NewMoney,
   MoneyDiff = ?town_price.
 
@@ -102,7 +102,7 @@ handle_call(get_state, _From, State) ->
   NewState = state_calculator:calculate(State),
   Flower = NewState#user_state.flower,
   FlowerProplist = [{id, Flower#user_flower.id}, {time, Flower#user_flower.time}, {completed, Flower#user_flower.completed}],
-  UserRespond = [{money, NewState#user_state.money}, {food, NewState#user_state.food}, {plot, FlowerProplist}],
+  UserRespond = [{level, NewState#user_state.level}, {money, NewState#user_state.money}, {food, NewState#user_state.food}, {plot, FlowerProplist}],
   {reply, {ok, UserRespond}, NewState};
 
 handle_call(clean_plot, _From, State) ->
