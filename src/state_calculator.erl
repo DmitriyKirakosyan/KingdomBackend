@@ -21,7 +21,12 @@ calculate(State) when is_record(State, user_state) ->
         NewState#user_state.money > 2000 ->
             NewState#user_state.money;
         true ->
-            NewState#user_state.money + TimeDiff div 5
+            case TimeDiff div 50 of
+                MoneyPlus when MoneyPlus + NewState#user_state.money < 2000 ->
+                    NewState#user_state.money + MoneyPlus;
+                _ ->
+                    2000
+            end
     end,
     NewState#user_state{last_update = TimeNow, money = NewMoney}.
 
