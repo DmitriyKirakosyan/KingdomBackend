@@ -85,7 +85,8 @@ handle_call(get_flower_profit, _From, State) ->
     case Flower#user_flower.completed of
         true ->
             NewFlower = Flower#user_flower{completed = false},
-            {reply, {ok, profit_taken}, NewState#user_state{flower=NewFlower}};
+            Food = NewState#user_state.food,
+            {reply, {ok, profit_taken}, NewState#user_state{flower=NewFlower, food = Food + ?flower1#flower.profit}};
         _False ->
             {reply, {error, not_completed}, NewState}
     end;

@@ -8,15 +8,9 @@
 calculate(State) when is_record(State, user_state) ->
     TimeNow = milliseconds_now(),
     TimeDiff = TimeNow - State#user_state.last_update,
-    Flower = State#user_state.flower,
     State1 = calculate_level(State, TimeDiff),
-    NewState = if
-        Flower#user_flower.time > 0 andalso (Flower#user_flower.time - TimeDiff) =< 0 ->
-            NewFlower = Flower#user_flower{completed = true, time = 0},
-            State1#user_state{flower = NewFlower};
-        true ->
-            State1
-    end,
+    State2 = calculate_food(State1, TimeDiff),
+    NewState = calculate_plot(State2, TimeDiff),
     NewMoney = if
         NewState#user_state.money > 2000 ->
             NewState#user_state.money;
@@ -29,6 +23,23 @@ calculate(State) when is_record(State, user_state) ->
             end
     end,
     NewState#user_state{last_update = TimeNow, money = NewMoney}.
+
+calculate_plot(State, TimeDiff) ->
+    Flower = State#user_state.flower,
+    if
+        Flower#user_flower.time > 0 ->
+            if
+                (Flower#user_flower.time - TimeDiff) =< 0 ->
+                    NewFlower = Flower#user_flower{completed = true, time = 0},
+                    State#user_state{flower = NewFlower};
+                true ->
+                    NewFlower = Flower#user_flower{time = Flower#user_flower.time - TimeDiff},
+                    State#user_state{flower = NewFlower}
+            end;
+        true ->
+            State
+    end.
+
 
 calculate_level(State, TimeDiff) ->
     Level = State#user_state.level,
@@ -43,6 +54,17 @@ calculate_level(State, TimeDiff) ->
             end;
         true -> State
     end.
+
+calculate_food(State, TimeDiff) ->
+    Food = State#user_state.food,
+    NewFood = if
+        Food > 0 ->
+            Food - (TimeDiff div 900) / 2;
+        true ->
+            0
+    end,
+    State#user_state{food = NewFood}.
+
 
 milliseconds_diff(T2, T1) ->
     timer:now_diff(T2, T1) div 1000.
