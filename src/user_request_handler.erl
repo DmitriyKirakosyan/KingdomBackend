@@ -18,7 +18,7 @@ handle(<<"get_objects">>, _Params) ->
 handle(<<"plant_flower">>, _Params) ->
     user_session:plant_flower();
 
-handle(<<"get_flower_profit">>, Params) ->
+handle(<<"get_flower_profit">>, _Params) ->
     user_session:get_flower_profit();
 
 handle(<<"buy_town">>, Params) ->
@@ -39,6 +39,9 @@ handle(<<"remove_town">>, Params) ->
     Y = proplists:get_value(<<"y">>, Params, 0),
     game_map:remove_town(Id, X, Y),
     {ok, removed};
+
+handle(<<"upgrade_castle">>, _Params) ->
+    user_session:upgrade_castle();
 
 handle(<<"get_state">>, _Params) ->
     user_session:get_state().
